@@ -36,8 +36,11 @@ class ViewController: UIViewController {
             "status": "active"
         ]
         
+        
+        //http://104.199.44.253/
+        //Tams-MacBook-Pro.local:8080
         Alamofire.request(
-            "http://Tams-MacBook-Pro.local:8080/DangKyKhamBenh_SERVER/index.php",
+            "http://104.199.44.253/DangKyKhamBenh_SERVER/index.php",
             method: .post,
             parameters: parameters,
             encoding: URLEncoding.httpBody).responseJSON { response in
