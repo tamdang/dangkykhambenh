@@ -224,6 +224,7 @@
 					39A884231D9588D3006E5BCC = {
 						CreatedOnToolsVersion = 8.0;
 						DevelopmentTeam = 476S9FM8QG;
+						LastSwiftMigration = 0800;
 						ProvisioningStyle = Automatic;
 					};
 					39A8843A1D9588D4006E5BCC = {
@@ -495,12 +496,14 @@
 			baseConfigurationReference = ADBC2F1089A8E1838A43548F /* Pods-dangkykhambenh.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = 476S9FM8QG;
 				INFOPLIST_FILE = dangkykhambenh/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tamdang.dangkykhambenh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -510,12 +513,14 @@
 			baseConfigurationReference = D9541317AD1C06597D45A506 /* Pods-dangkykhambenh.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = 476S9FM8QG;
 				INFOPLIST_FILE = dangkykhambenh/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tamdang.dangkykhambenh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "dangkykhambenh/dangkykhambenh-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;

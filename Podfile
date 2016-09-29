@@ -6,4 +6,7 @@ use_frameworks!
 
 target 'dangkykhambenh' do
   pod 'Alamofire', '~> 4.0'
+  pod 'FacebookCore'
+  pod 'FacebookLogin'
+  pod 'FacebookShare'
 end

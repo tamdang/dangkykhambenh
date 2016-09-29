@@ -8,6 +8,7 @@
 
 import UIKit
 import Alamofire
+import FacebookLogin
 
 class ViewController: UIViewController {
 
@@ -20,7 +21,10 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
 
+        let loginButton = LoginButton(readPermissions: [ .publicProfile ])
+        loginButton.center = view.center
         
+        view.addSubview(loginButton)
     }
 
     override func didReceiveMemoryWarning() {
