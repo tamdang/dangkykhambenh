@@ -9,6 +9,8 @@
 import UIKit
 import Alamofire
 import FacebookLogin
+import FacebookCore
+import FBSDKCoreKit
 
 class ViewController: UIViewController, LoginButtonDelegate {
 
@@ -25,9 +27,61 @@ class ViewController: UIViewController, LoginButtonDelegate {
             print(error)
         case .cancelled:
             print("User cancelled login.")
-        case .success(let grantedPermissions, let declinedPermissions, let accessToken):
+        case .success(_, _, _):
             print("Logged in!")
-        }
+            
+            // Requires user_likes permission to be granted.
+//            let connection = GraphRequestConnection()
+//            connection.add(GraphRequest(graphPath: "me/likes")) {
+//                (response: HTTPURLResponse?, result: GraphRequestResult<GraphRequest>) in
+//                // Process error or results here.
+//                
+//                
+//                print(result)
+//            }
+//            connection.start()
+//            
+            
+            let parameters = ["fields": "email, first_name, last_name, picture.type(large)"]
+            FBSDKGraphRequest(graphPath: "me", parameters: parameters).start(completionHandler: { (connection, user, requestError) -> Void in
+                
+                if requestError != nil {
+                    print(requestError)
+                    return
+                }
+                
+                let userInfo : [String : Any] = (user as? [String : Any])!
+                
+                let email = userInfo["email"] as? String
+                let firstName = userInfo["first_name"] as? String
+                let lastName = userInfo["last_name"] as? String
+                
+                print("email: \(email) firstname: \(firstName) lastname: \(lastName)")
+        })
+    }
+    
+//    func returnUserData()
+//    {
+//        
+//        
+//        let graphRequest : FBSDKGraphRequest = FBSDKGraphRequest(graphPath: "me", parameters: nil)
+//        
+//        graphRequest.start(completionHandler: { (connection, result, error) -> Void in
+//            
+//            if ((error) != nil)
+//            {
+//                // Process error
+//                print("Error: \(error)")
+//            }
+//            else
+//            {
+//                print("fetched user: \(result)")
+//                let userName : NSString = result.valueForKey("name") as! NSString
+//                print("User Name is: \(userName)")
+//                let userEmail : NSString = result.valueForKey("email") as! NSString
+//                print("User Email is: \(userEmail)")
+//            }
+//        })
     }
     
     /**
