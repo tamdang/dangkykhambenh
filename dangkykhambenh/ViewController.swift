@@ -42,7 +42,7 @@ class ViewController: UIViewController, LoginButtonDelegate {
 //            connection.start()
 //            
             
-            let parameters = ["fields": "email, first_name, last_name, picture.type(large)"]
+            let parameters = ["fields": "id, name"]
             FBSDKGraphRequest(graphPath: "me", parameters: parameters).start(completionHandler: { (connection, user, requestError) -> Void in
                 
                 if requestError != nil {
@@ -52,11 +52,10 @@ class ViewController: UIViewController, LoginButtonDelegate {
                 
                 let userInfo : [String : Any] = (user as? [String : Any])!
                 
-                let email = userInfo["email"] as? String
-                let firstName = userInfo["first_name"] as? String
-                let lastName = userInfo["last_name"] as? String
+                let id = userInfo["id"] as? String
+                let name = userInfo["name"] as? String
                 
-                print("email: \(email) firstname: \(firstName) lastname: \(lastName)")
+                print("id: \(id) name: \(name)")
         })
     }
     
