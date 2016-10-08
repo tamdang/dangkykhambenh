@@ -12,100 +12,69 @@ import FacebookLogin
 import FacebookCore
 import FBSDKCoreKit
 
-class ViewController: UIViewController, LoginButtonDelegate {
+class ViewController: UIViewController {
 
-    /**
-     Called when the button was used to login and the process finished.
-     
-     - parameter loginButton: Button that was used to login.
-     - parameter result:      The result of the login.
-     */
-    func loginButtonDidCompleteLogin(_ loginButton: LoginButton, result: LoginResult){
-        print("hahaha")
-        switch result {
-        case .failed(let error):
-            print(error)
-        case .cancelled:
-            print("User cancelled login.")
-        case .success(_, _, _):
-            print("Logged in!")
+    @IBOutlet weak var loginFBButton: UIButton!
+    @IBOutlet weak var textMessage: UILabel!
+
+    @IBAction func loginFBButtonClick(_ sender: AnyObject) {
+        
+        let loginManager = LoginManager()
+        
+        if FBSDKAccessToken.current() != nil {
+            // User is logged in, do work such as go to next view controller.
+            //            loginFBButton.isHidden = true
+            loginManager.logOut() // this is an instance function
             
-            // Requires user_likes permission to be granted.
-//            let connection = GraphRequestConnection()
-//            connection.add(GraphRequest(graphPath: "me/likes")) {
-//                (response: HTTPURLResponse?, result: GraphRequestResult<GraphRequest>) in
-//                // Process error or results here.
-//                
-//                
-//                print(result)
-//            }
-//            connection.start()
-//            
-            
-            let parameters = ["fields": "id, name"]
-            FBSDKGraphRequest(graphPath: "me", parameters: parameters).start(completionHandler: { (connection, user, requestError) -> Void in
-                
-                if requestError != nil {
-                    print(requestError)
-                    return
-                }
-                
-                let userInfo : [String : Any] = (user as? [String : Any])!
-                
-                let id = userInfo["id"] as? String
-                let name = userInfo["name"] as? String
-                
-                print("id: \(id) name: \(name)")
-        })
-    }
-    
-//    func returnUserData()
-//    {
-//        
-//        
-//        let graphRequest : FBSDKGraphRequest = FBSDKGraphRequest(graphPath: "me", parameters: nil)
-//        
-//        graphRequest.start(completionHandler: { (connection, result, error) -> Void in
-//            
-//            if ((error) != nil)
-//            {
-//                // Process error
-//                print("Error: \(error)")
-//            }
-//            else
-//            {
-//                print("fetched user: \(result)")
-//                let userName : NSString = result.valueForKey("name") as! NSString
-//                print("User Name is: \(userName)")
-//                let userEmail : NSString = result.valueForKey("email") as! NSString
-//                print("User Email is: \(userEmail)")
-//            }
-//        })
-    }
-    
-    /**
-     Called when the button was used to logout.
-     
-     - parameter loginButton: Button that was used to logout.
-     */
-    func loginButtonDidLogOut(_ loginButton: LoginButton){
+            self.loginFBButton.titleLabel?.text = "Login"
+            return
+        }
+        
+        loginManager.logIn([.publicProfile], viewController: self){
+            loginResult in
+            switch loginResult{
+            case .failed(let error):
+                print(error)
+            case .cancelled:
+                print ("User canncelled login.")
+            case .success(_, _, _):
+                self.loginFBButton.titleLabel?.text = "Logout"
+                let parameters = ["fields": "id, name"]
+                FBSDKGraphRequest(graphPath: "me", parameters: parameters).start(completionHandler: { (connection, user, requestError) -> Void in
+                    
+                    if requestError != nil {
+                        print(requestError)
+                        return
+                    }
+                    
+                    let userInfo : [String : Any] = (user as? [String : Any])!
+                    
+                    let id = userInfo["id"] as? String
+                    let name = userInfo["name"] as? String
+                    
+                    self.textMessage.text = "name \(name!) id \(id!)"
+                })
+
+            }
+        }
         
     }
-    
-    @IBOutlet weak var textMessage: UILabel!
     
     var count : Int = 2
     
     override func viewDidLoad() {
         
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-
-        let loginButton = LoginButton(readPermissions: [ .publicProfile ])
-        loginButton.center = view.center
-        loginButton.delegate = self
         
-        view.addSubview(loginButton)
+        if FBSDKAccessToken.current() != nil {
+            // User is logged in, do work such as go to next view controller.
+//            loginFBButton.isHidden = true
+            loginFBButton.titleLabel?.text = "Logout"
+        }
+        else{
+            loginFBButton.titleLabel?.text = "Login"
+        }
+        
     }
 
     override func didReceiveMemoryWarning() {

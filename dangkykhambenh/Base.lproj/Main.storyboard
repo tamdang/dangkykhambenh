@@ -32,10 +32,19 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XHg-Vi-3zZ">
+                                <frame key="frameInset" minX="97" minY="566" width="181" height="81"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="FB Login"/>
+                                <connections>
+                                    <action selector="loginFBButtonClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="8dT-Wv-lNS"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     </view>
                     <connections>
+                        <outlet property="loginFBButton" destination="XHg-Vi-3zZ" id="hjX-zb-dfD"/>
                         <outlet property="textMessage" destination="Nji-B1-03s" id="zfs-bS-84s"/>
                     </connections>
                 </viewController>
