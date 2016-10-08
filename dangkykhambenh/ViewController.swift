@@ -52,8 +52,6 @@ class ViewController: UIViewController {
         
     }
     
-    var count : Int = 2
-    
     func getFacebookUserInfo(){
         let parameters = ["fields": "id, name"]
         FBSDKGraphRequest(graphPath: "me", parameters: parameters).start(completionHandler: { (connection, user, requestError) -> Void in
@@ -114,12 +112,8 @@ class ViewController: UIViewController {
             return
         }
         
-        
-        count += 1
         let parameters: Parameters = [
-            "name": "Dang Thanh Tam XCODE \(count)",
-            "email": "dangtam@gmail.com",
-            "status": "active"
+            "id": UserInfo.Instance.id!
         ]
         
         
@@ -140,9 +134,9 @@ class ViewController: UIViewController {
                         let jsonResult = try JSONSerialization.jsonObject(with: urlContent, options:
                             JSONSerialization.ReadingOptions.mutableContainers) as! Dictionary<String, AnyObject>
                         
-                        self.textMessage.text = jsonResult["msg"] as! String?
-                        
-                        
+                        if let registerNumber = Int(jsonResult["msg"] as! String){
+                            self.textMessage.text = "Your nummber is \(registerNumber)"
+                        }
                     } catch {
                         
                         print("JSON Processing Failed")
