@@ -26,7 +26,9 @@ class ViewController: UIViewController {
             //            loginFBButton.isHidden = true
             loginManager.logOut() // this is an instance function
             
-            self.loginFBButton.titleLabel?.text = "Login"
+            self.loginFBButton.setTitle("Login", for: UIControlState.normal)
+
+            UserInfo.Instance.id = nil
             return
         }
         
@@ -38,22 +40,12 @@ class ViewController: UIViewController {
             case .cancelled:
                 print ("User canncelled login.")
             case .success(_, _, _):
-                self.loginFBButton.titleLabel?.text = "Logout"
-                let parameters = ["fields": "id, name"]
-                FBSDKGraphRequest(graphPath: "me", parameters: parameters).start(completionHandler: { (connection, user, requestError) -> Void in
-                    
-                    if requestError != nil {
-                        print(requestError)
-                        return
-                    }
-                    
-                    let userInfo : [String : Any] = (user as? [String : Any])!
-                    
-                    let id = userInfo["id"] as? String
-                    let name = userInfo["name"] as? String
-                    
-                    self.textMessage.text = "name \(name!) id \(id!)"
-                })
+                self.loginFBButton.setTitle("Logout", for: UIControlState.normal)
+
+                self.getFacebookUserInfo()
+                if let name = UserInfo.Instance.name, let id = UserInfo.Instance.id {
+                    self.textMessage.text = "name \(name) id \(id)"
+                }
 
             }
         }
@@ -62,6 +54,26 @@ class ViewController: UIViewController {
     
     var count : Int = 2
     
+    func getFacebookUserInfo(){
+        let parameters = ["fields": "id, name"]
+        FBSDKGraphRequest(graphPath: "me", parameters: parameters).start(completionHandler: { (connection, user, requestError) -> Void in
+            
+            if requestError != nil {
+                print(requestError)
+                return
+            }
+            
+            let userInfo : [String : Any] = (user as? [String : Any])!
+            
+            let id = userInfo["id"] as? String
+            let name = userInfo["name"] as? String
+            
+            UserInfo.Instance.id = id
+            UserInfo.Instance.name = name
+            
+        })
+    }
+    
     override func viewDidLoad() {
         
         super.viewDidLoad()
@@ -69,10 +81,14 @@ class ViewController: UIViewController {
         if FBSDKAccessToken.current() != nil {
             // User is logged in, do work such as go to next view controller.
 //            loginFBButton.isHidden = true
-            loginFBButton.titleLabel?.text = "Logout"
+//            loginFBButton.titleLabel!.text = "Logout"
+            self.loginFBButton.setTitle("Logout", for: UIControlState.normal)
+            getFacebookUserInfo()
         }
         else{
-            loginFBButton.titleLabel?.text = "Login"
+//            loginFBButton.titleLabel!.text = "Login"
+            self.loginFBButton.setTitle("Login", for: UIControlState.normal)
+            UserInfo.Instance.id = nil
         }
         
     }
@@ -83,6 +99,22 @@ class ViewController: UIViewController {
     }
 
     @IBAction func insertData(_ sender: AnyObject) {
+        
+        if UserInfo.Instance.id == nil {
+            
+            let message = "Pls. login in with FB in order to register"
+            
+            let alertController = UIAlertController(title: title, message: message, preferredStyle:UIAlertControllerStyle.alert)
+            
+            alertController.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default)
+            { action -> Void in
+                // Put your code here
+            })
+            self.present(alertController, animated: true, completion: nil)
+            return
+        }
+        
+        
         count += 1
         let parameters: Parameters = [
             "name": "Dang Thanh Tam XCODE \(count)",

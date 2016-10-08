@@ -16,6 +16,7 @@
 		39A884351D9588D3006E5BCC /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 39A884331D9588D3006E5BCC /* LaunchScreen.storyboard */; };
 		39A884401D9588D4006E5BCC /* dangkykhambenhTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39A8843F1D9588D4006E5BCC /* dangkykhambenhTests.swift */; };
 		39A8844B1D9588D4006E5BCC /* dangkykhambenhUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39A8844A1D9588D4006E5BCC /* dangkykhambenhUITests.swift */; };
+		39E67E521DA87E8F009A692B /* UserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E67E511DA87E8F009A692B /* UserInfo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +52,7 @@
 		39A884461D9588D4006E5BCC /* dangkykhambenhUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = dangkykhambenhUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		39A8844A1D9588D4006E5BCC /* dangkykhambenhUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dangkykhambenhUITests.swift; sourceTree = "<group>"; };
 		39A8844C1D9588D4006E5BCC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		39E67E511DA87E8F009A692B /* UserInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserInfo.swift; sourceTree = "<group>"; };
 		ADBC2F1089A8E1838A43548F /* Pods-dangkykhambenh.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-dangkykhambenh.debug.xcconfig"; path = "Pods/Target Support Files/Pods-dangkykhambenh/Pods-dangkykhambenh.debug.xcconfig"; sourceTree = "<group>"; };
 		D9541317AD1C06597D45A506 /* Pods-dangkykhambenh.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-dangkykhambenh.release.xcconfig"; path = "Pods/Target Support Files/Pods-dangkykhambenh/Pods-dangkykhambenh.release.xcconfig"; sourceTree = "<group>"; };
 		D992E4920AFA69BB0114D1CD /* Pods_dangkykhambenh.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_dangkykhambenh.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -115,6 +117,7 @@
 				39A884331D9588D3006E5BCC /* LaunchScreen.storyboard */,
 				39A884361D9588D3006E5BCC /* Info.plist */,
 				39A8842E1D9588D3006E5BCC /* dangkykhambenh.xcdatamodeld */,
+				39E67E511DA87E8F009A692B /* UserInfo.swift */,
 			);
 			path = dangkykhambenh;
 			sourceTree = "<group>";
@@ -348,6 +351,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				39E67E521DA87E8F009A692B /* UserInfo.swift in Sources */,
 				39A8842A1D9588D3006E5BCC /* ViewController.swift in Sources */,
 				39A884301D9588D3006E5BCC /* dangkykhambenh.xcdatamodeld in Sources */,
 				39A884281D9588D3006E5BCC /* AppDelegate.swift in Sources */,
