@@ -16,15 +16,16 @@ class ViewController: UIViewController {
 
     @IBOutlet weak var loginFBButton: UIButton!
     @IBOutlet weak var textMessage: UILabel!
-
+    
+    var isUserRegister : Bool = false
+    
     @IBAction func loginFBButtonClick(_ sender: AnyObject) {
         
         let loginManager = LoginManager()
         
         if FBSDKAccessToken.current() != nil {
             // User is logged in, do work such as go to next view controller.
-            //            loginFBButton.isHidden = true
-            loginManager.logOut() // this is an instance function
+            loginManager.logOut()
             
             self.loginFBButton.setTitle("Login", for: UIControlState.normal)
 
@@ -43,16 +44,13 @@ class ViewController: UIViewController {
                 self.loginFBButton.setTitle("Logout", for: UIControlState.normal)
 
                 self.getFacebookUserInfo()
-                if let name = UserInfo.Instance.name, let id = UserInfo.Instance.id {
-                    self.textMessage.text = "name \(name) id \(id)"
-                }
-
             }
         }
         
     }
     
     func getFacebookUserInfo(){
+        
         let parameters = ["fields": "id, name"]
         FBSDKGraphRequest(graphPath: "me", parameters: parameters).start(completionHandler: { (connection, user, requestError) -> Void in
             
@@ -69,6 +67,7 @@ class ViewController: UIViewController {
             UserInfo.Instance.id = id
             UserInfo.Instance.name = name
             
+            self.isUserRegistered()
         })
     }
     
@@ -76,22 +75,25 @@ class ViewController: UIViewController {
         
         super.viewDidLoad()
         
+        var loginButtonTitle : String
+
         if FBSDKAccessToken.current() != nil {
             // User is logged in, do work such as go to next view controller.
-//            loginFBButton.isHidden = true
-//            loginFBButton.titleLabel!.text = "Logout"
-            self.loginFBButton.setTitle("Logout", for: UIControlState.normal)
+            loginButtonTitle = "Logout"
             getFacebookUserInfo()
+            
         }
         else{
-//            loginFBButton.titleLabel!.text = "Login"
-            self.loginFBButton.setTitle("Login", for: UIControlState.normal)
+            loginButtonTitle = "Login"
             UserInfo.Instance.id = nil
         }
+        
+        self.loginFBButton.setTitle(loginButtonTitle, for: UIControlState.normal)
         
     }
 
     override func didReceiveMemoryWarning() {
+        
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
@@ -99,11 +101,8 @@ class ViewController: UIViewController {
     @IBAction func insertData(_ sender: AnyObject) {
         
         if UserInfo.Instance.id == nil {
-            
             let message = "Pls. login in with FB in order to register"
-            
             let alertController = UIAlertController(title: title, message: message, preferredStyle:UIAlertControllerStyle.alert)
-            
             alertController.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default)
             { action -> Void in
                 // Put your code here
@@ -112,25 +111,24 @@ class ViewController: UIViewController {
             return
         }
         
+        registerANumber()
+    }
+    
+    func registerANumber(){
+
         let parameters: Parameters = [
             "id": UserInfo.Instance.id!
         ]
         
+        let url : String = Config.Instance.localURL + Config.Instance.phpRegisterANumber
         
-        //http://104.199.44.253/
-        //Tams-MacBook-Pro.local:8080
         Alamofire.request(
-            "http://104.199.44.253/DangKyKhamBenh_SERVER/index.php",
+            url,
             method: .post,
             parameters: parameters,
             encoding: URLEncoding.httpBody).responseJSON { response in
-                
-                debugPrint(response)
-                
                 if let urlContent = response.data {
-                    
                     do {
-                        
                         let jsonResult = try JSONSerialization.jsonObject(with: urlContent, options:
                             JSONSerialization.ReadingOptions.mutableContainers) as! Dictionary<String, AnyObject>
                         
@@ -138,12 +136,40 @@ class ViewController: UIViewController {
                             self.textMessage.text = "Your nummber is \(registerNumber)"
                         }
                     } catch {
-                        
                         print("JSON Processing Failed")
                     }
                 }
         }
-
     }
+    
+    func isUserRegistered(){
+        let parameters: Parameters = [
+            "id": UserInfo.Instance.id!
+        ]
+        
+        let url : String = Config.Instance.localURL + Config.Instance.phpIsUserRegistered
+        
+        Alamofire.request(
+            url,
+            method: .post,
+            parameters: parameters,
+            encoding: URLEncoding.httpBody).responseJSON { response in
+                if let urlContent = response.data {
+                    do {
+                        let jsonResult = try JSONSerialization.jsonObject(with: urlContent, options:
+                            JSONSerialization.ReadingOptions.mutableContainers) as! Dictionary<String, AnyObject>
+                        
+                        if let rowCount = Int(jsonResult["msg"] as! String){
+                            if rowCount > 0 {
+                                self.registerANumber()
+                            }
+                        }
+                    } catch {
+                        print("JSON Processing Failed")
+                    }
+                }
+        }
+    }
+
 }
 

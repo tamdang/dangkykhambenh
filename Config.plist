@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>serverURL</key>
+	<string>http://104.199.44.253/DangKyKhamBenh_SERVER/</string>
+	<key>localURL</key>
+	<string>http://Tams-MacBook-Pro.local:8080/DangKyKhamBenh_SERVER/</string>
+	<key>phpIsUserRegistered</key>
+	<string>userHasRegister.php</string>
+	<key>phpRegisterANumber</key>
+	<string>index.php</string>
+</dict>
+</plist>

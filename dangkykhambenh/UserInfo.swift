@@ -12,7 +12,7 @@ class UserInfo{
     
     private static var sharedInstance : UserInfo? = nil
     
-    var id : String?
+    var id : String? = nil
     var name: String?
     
     static var Instance : UserInfo = {
