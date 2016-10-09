@@ -14,7 +14,6 @@ class Config{
     private static var sharedInstance : Config? = nil
     
     let serverURL : String
-    let localURL : String
     let phpIsUserRegistered : String
     let phpRegisterANumber : String
 
@@ -41,7 +40,7 @@ class Config{
         }
         
         serverURL = plistData["serverURL"] as! String
-        localURL = plistData["localURL"] as! String
+//        serverURL = plistData["localURL"] as! String
         phpIsUserRegistered = plistData["phpIsUserRegistered"] as! String
         phpRegisterANumber = plistData["phpRegisterANumber"] as! String
     }

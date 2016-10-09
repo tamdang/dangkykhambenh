@@ -28,6 +28,7 @@ class ViewController: UIViewController {
             loginManager.logOut()
             
             self.loginFBButton.setTitle("Login", for: UIControlState.normal)
+            textMessage.text = ""
 
             UserInfo.Instance.id = nil
             return
@@ -120,7 +121,7 @@ class ViewController: UIViewController {
             "id": UserInfo.Instance.id!
         ]
         
-        let url : String = Config.Instance.localURL + Config.Instance.phpRegisterANumber
+        let url : String = Config.Instance.serverURL + Config.Instance.phpRegisterANumber
         
         Alamofire.request(
             url,
@@ -147,7 +148,7 @@ class ViewController: UIViewController {
             "id": UserInfo.Instance.id!
         ]
         
-        let url : String = Config.Instance.localURL + Config.Instance.phpIsUserRegistered
+        let url : String = Config.Instance.serverURL + Config.Instance.phpIsUserRegistered
         
         Alamofire.request(
             url,
