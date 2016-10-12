@@ -60,15 +60,11 @@ class ViewController: UIViewController {
                 return
             }
             
-            let userInfo : [String : Any] = (user as? [String : Any])!
-            
-            let id = userInfo["id"] as? String
-            let name = userInfo["name"] as? String
-            
-            UserInfo.Instance.id = id
-            UserInfo.Instance.name = name
-            
-            self.isUserRegistered()
+            if let userInfo = user as? [String:String] {
+                UserInfo.Instance.id = userInfo["id"]
+                UserInfo.Instance.name = userInfo["name"]
+                self.isUserRegistered()
+            }
         })
     }
     
