@@ -27,4 +27,15 @@ END$$
 
 DELIMITER ;
 
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `checkIn` (IN `userID` VARCHAR(20))  BEGIN
+    UPDATE RegisteringInfo set checkin = TRUE, checkintime = CURRENT_TIMESTAMP WHERE targetDate = CURRENT_DATE AND RegisteringInfo.userId = userID; 
+END$$
+
+DELIMITER ;
+
+
 call isUserRegisteredToday('isUserRegisteredToday')
