@@ -32,10 +32,60 @@ DELIMITER $$
 -- Procedures
 --
 CREATE DEFINER=`root`@`localhost` PROCEDURE `checkIn` (IN `userID` VARCHAR(20))  BEGIN
-    UPDATE RegisteringInfo set checkin = TRUE, checkintime = CURRENT_TIMESTAMP WHERE targetDate = CURRENT_DATE AND RegisteringInfo.userId = userID; 
+    UPDATE RegisteringInfo set checkin = TRUE, checkintime = CURRENT_TIMESTAMP WHERE targetDate = CURRENT_DATE AND RegisteringInfo.userId = userID;
 END$$
 
 DELIMITER ;
 
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getCurrentAndNext` (IN `doctorID` INT)  BEGIN
+    SELECT registerNumber FROM RegisteringInfo
+    WHERE RegisteringInfo.doctorID = doctorID AND checkin = 1
+          AND targetDate = CURRENT_DATE AND DATE(checkintime) = CURRENT_DATE
+          AND alreadyChecked = 0
+    ORDER BY checkintime
+    LIMIT 2;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getWaitingList` (IN `doctorID` INT)  BEGIN
+    SELECT registerNumber FROM RegisteringInfo
+    WHERE RegisteringInfo.doctorID = doctorID AND checkin = 1
+        AND targetDate = CURRENT_DATE AND DATE(checkintime) = CURRENT_DATE
+        AND alreadyChecked = 0
+    ORDER BY checkintime;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `goToNext` (IN `doctorID` INT, `nextOrSkip` TINYINT)  BEGIN
+    DECLARE id BIGINT;
+    SELECT RegisteringInfo.ID INTO id FROM RegisteringInfo
+    WHERE RegisteringInfo.doctorID = doctorID AND checkin = 1
+          AND targetDate = CURRENT_DATE AND DATE(checkintime) = CURRENT_DATE
+          AND alreadyChecked = 0
+    ORDER BY checkintime
+    LIMIT 1;
+    UPDATE RegisteringInfo SET alreadyChecked = nextOrSkip WHERE RegisteringInfo.id = id;
+END$$
+
+DELIMITER ;
 
 call isUserRegisteredToday('isUserRegisteredToday')
+
+call registerANumber('1234')
+call checkin('1234')
+
+UPDATE RegisteringInfo SET checkin = 1, alreadyChecked = 1 where id = 30
