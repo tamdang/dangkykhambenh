@@ -1,10 +1,26 @@
-BEGIN
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `registerANumber` (IN `userID` VARCHAR(20), IN `doctorID` INT)
+ThisSP:BEGIN
   	DECLARE registerNumber INT default 1;
+    DECLARE dayOff INT default 1;
+
+    SELECT COUNT(doctorID) INTO dayOff
+    FROM NonCheckingDay
+    WHERE NonCheckingDay.doctorID = doctorID AND NonCheckingDay.date = CURRENT_DATE;
+
+    IF dayOff > 0 THEN
+        SELECT -1;
+        LEAVE ThisSP;
+    END IF;
 
     SELECT COUNT(id) INTO registerNumber FROM RegisteringInfo WHERE RegisteringInfo.userId = userId AND targetDate = CURRENT_DATE;
 
     IF registerNumber < 1 THEN
-      	INSERT INTO RegisteringInfo (id, registeringTime, targetDate, userId) VALUES (NULL, CURRENT_TIME, CURRENT_DATE, userID);
+      	INSERT INTO RegisteringInfo (id, registeringTime, targetDate, userId, doctorID) VALUES (NULL, CURRENT_TIME, CURRENT_DATE, userID, doctorID);
         SELECT COUNT(id) INTO registerNumber FROM RegisteringInfo WHERE targetDate = CURRENT_DATE AND id < LAST_INSERT_ID();
         SET registerNumber = registerNumber + 1;
         UPDATE RegisteringInfo set RegisteringInfo.registerNumber = registerNumber WHERE targetDate = CURRENT_DATE AND RegisteringInfo.userId = userID;
@@ -13,6 +29,8 @@ BEGIN
     END IF;
     select registerNumber;
 END
+
+DELIMITER ;
 
 
 DELIMITER $$

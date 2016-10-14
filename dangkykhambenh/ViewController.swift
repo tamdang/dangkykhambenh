@@ -102,6 +102,7 @@ class ViewController: UIViewController {
             let alertController = UIAlertController(title: title, message: message, preferredStyle:UIAlertControllerStyle.alert)
             alertController.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default)
             { action -> Void in
+                
                 // Put your code here
             })
             self.present(alertController, animated: true, completion: nil)
@@ -114,7 +115,8 @@ class ViewController: UIViewController {
     func registerANumber(){
 
         let parameters: Parameters = [
-            "id": UserInfo.Instance.id!
+            "id": UserInfo.Instance.id!,
+            "doctorID": 0
         ]
         
         let url : String = Config.Instance.serverURL + Config.Instance.phpRegisterANumber
@@ -130,7 +132,12 @@ class ViewController: UIViewController {
                             JSONSerialization.ReadingOptions.mutableContainers) as! Dictionary<String, AnyObject>
                         
                         if let registerNumber = Int(jsonResult["msg"] as! String){
-                            self.textMessage.text = "Your nummber is \(registerNumber)"
+                            if registerNumber < 0 {
+                                self.textMessage.text = "DAY OFF"
+                            }
+                            else {
+                                self.textMessage.text = "Your number is \(registerNumber)"
+                            }
                         }
                     } catch {
                         print("JSON Processing Failed")

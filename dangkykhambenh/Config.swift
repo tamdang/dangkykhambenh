@@ -39,8 +39,8 @@ class Config{
             print("Error reading plist: \(error), format: \(propertyListForamt)")
         }
         
-        serverURL = plistData["serverURL"] as! String
-//        serverURL = plistData["localURL"] as! String
+//        serverURL = plistData["serverURL"] as! String
+        serverURL = plistData["localURL"] as! String
         phpIsUserRegistered = plistData["phpIsUserRegistered"] as! String
         phpRegisterANumber = plistData["phpRegisterANumber"] as! String
     }
