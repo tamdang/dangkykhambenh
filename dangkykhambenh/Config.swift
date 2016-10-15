@@ -16,6 +16,7 @@ class Config{
     let serverURL : String
     let phpIsUserRegistered : String
     let phpRegisterANumber : String
+    let phpGetCurrentAndNext : String
 
     static var Instance : Config = {
         
@@ -43,6 +44,7 @@ class Config{
         serverURL = plistData["localURL"] as! String
         phpIsUserRegistered = plistData["phpIsUserRegistered"] as! String
         phpRegisterANumber = plistData["phpRegisterANumber"] as! String
+        phpGetCurrentAndNext = plistData["phpGetCurrentAndNext"] as! String
     }
 
 }

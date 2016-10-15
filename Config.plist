@@ -10,5 +10,7 @@
 	<string>userHasRegister.php</string>
 	<key>phpRegisterANumber</key>
 	<string>index.php</string>
+	<key>phpGetCurrentAndNext</key>
+	<string>getCurrentAndNext.php</string>
 </dict>
 </plist>

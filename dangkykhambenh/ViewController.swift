@@ -19,6 +19,9 @@ class ViewController: UIViewController {
     
     var isUserRegister : Bool = false
     
+    @IBOutlet weak var labelNext: UILabel!
+    @IBOutlet weak var labelCurrent: UILabel!
+    
     @IBAction func loginFBButtonClick(_ sender: AnyObject) {
         
         let loginManager = LoginManager()
@@ -64,6 +67,8 @@ class ViewController: UIViewController {
                 UserInfo.Instance.id = userInfo["id"]
                 UserInfo.Instance.name = userInfo["name"]
                 self.isUserRegistered()
+                
+                self.getCurrentAndNext(doctorID: 0)
             }
         })
     }
@@ -168,6 +173,50 @@ class ViewController: UIViewController {
                                 self.registerANumber()
                             }
                         }
+                    } catch {
+                        print("JSON Processing Failed")
+                    }
+                }
+        }
+    }
+    
+    func getCurrentAndNext(doctorID: Int){
+        let parameters: Parameters = [
+            "doctorID": doctorID
+        ]
+        
+        let url : String = Config.Instance.serverURL + Config.Instance.phpGetCurrentAndNext
+        
+        Alamofire.request(
+            url,
+            method: .post,
+            parameters: parameters,
+            encoding: URLEncoding.httpBody).responseJSON { response in
+                if let urlContent = response.data {
+                    do {
+                        let jsonResult = try JSONSerialization.jsonObject(with: urlContent, options:
+                        JSONSerialization.ReadingOptions.mutableContainers) as? Dictionary<String, AnyObject>
+                        
+                        if let json = jsonResult {
+                            if let currentNumber = Int(json["current"] as! String) {
+                                if currentNumber > 0{
+                                    self.labelCurrent.text = "CURRENT: " + String(currentNumber)
+                                }
+                                else{
+                                    self.labelCurrent.text = "CURRENT: NOT START YET"
+                                }
+                            }
+                            
+                            if let nextNumber = Int(json["next"] as! String) {
+                                if nextNumber > 0 {
+                                    self.labelNext.text = "NEXT: " + String(nextNumber)
+                                }
+                                else {
+                                    self.labelNext.text = "NO ONE ELSE IS WAITING"
+                                }
+                            }
+                        }
+                        
                     } catch {
                         print("JSON Processing Failed")
                     }
