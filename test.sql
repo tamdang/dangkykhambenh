@@ -26,9 +26,12 @@ ThisSP:BEGIN
     END IF;
 
     -- ALREADY REGISTER -1
-    SELECT COUNT(id) INTO registerNumber FROM RegisteringInfo WHERE RegisteringInfo.userId = userId AND targetDate = CURRENT_DATE;
+    SELECT COUNT(id) INTO registerNumber FROM RegisteringInfo
+    WHERE RegisteringInfo.userId = userId AND targetDate = CURRENT_DATE
+          AND registerNumber < getSeatSeperator() AND RegisteringInfo.alreadyChecked >=0;
 
     IF registerNumber > 0 THEN
+
         SELECT -1;
         LEAVE ThisSP;
     END IF;
@@ -54,6 +57,33 @@ ThisSP:BEGIN
 END
 
 DELIMITER ;
+
+
+DELIMITER $$
+--
+-- Procedures
+--
+DROP PROCEDURE IF EXISTS requestANumber
+CREATE DEFINER=`root`@`localhost` PROCEDURE `requestANumber` (IN `userID` VARCHAR(20), IN `doctorID` INT)
+BEGIN
+    DECLARE ID BIGINT;
+    DECLARE seatID SMALLINT;
+
+    SELECT SeatAvailable.id, SeatAvailable.seatID INTO ID, seatID FROM tuts_rest.SeatAvailable
+    WHERE SeatAvailable.seatID  > getSeatSeperator() AND SeatAvailable.doctorID = doctorID
+          AND (SeatAvailable.day < CURRENT_DATE OR (SeatAvailable.day = CURRENT_DATE AND tuts_rest.SeatAvailable.status <>1))
+    ORDER BY SeatAvailable.seatID LIMIT 1;
+
+    START TRANSACTION;
+        UPDATE tuts_rest.SeatAvailable SET SeatAvailable.status = 1, day = CURRENT_DATE WHERE tuts_rest.SeatAvailable.id = ID;
+        INSERT INTO RegisteringInfo (id, registeringTime, targetDate, userId, doctorID, registerNumber)
+                VALUES (NULL, CURRENT_TIME, CURRENT_DATE, userID, doctorID, seatID);
+        SELECT seatID;
+    COMMIT;
+END
+
+DELIMITER ;
+
 
 DELIMITER $$
 --
@@ -166,7 +196,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `addAvailableSeat` (IN `doctorID` IN
     DECLARE count INT DEFAULT 1;
     start transaction;
       while count < 200 do
-        insert into SeatAvailable (doctorID, seat, status, day) values (doctorID, count, 0, CURRENT_DATE);
+        insert into SeatAvailable (doctorID, seatID, status, day) values (doctorID, count, 0, CURRENT_DATE);
         set count = count + 1;
       end while;
     commit;
@@ -182,6 +212,17 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `deleteAvailableSeat` (IN `doctorID`
     DECLARE count INT DEFAULT 1;
     DELETE FROM SeatAvailable WHERE SeatAvailable.doctorID = doctorID;
 END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS getSeatSeperator
+CREATE DEFINER=`root`@`localhost` FUNCTION `getSeatSeperator` ()
+RETURNS TINYINT UNSIGNED
+BEGIN
+RETURN 100;
+END
 
 DELIMITER ;
 
