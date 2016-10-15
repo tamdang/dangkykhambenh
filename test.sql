@@ -3,6 +3,62 @@ DELIMITER $$
 --
 -- Procedures
 --
+CREATE DEFINER=`root`@`localhost` PROCEDURE `bookASeat` (IN `userID` VARCHAR(20), `doctorID` INT, `seatID` SMALLINT)
+ThisSP:BEGIN
+  	DECLARE registerNumber INT default 1;
+    DECLARE dayOff INT default 1;
+    DECLARE seatStatus BOOL DEFAULT FALSE;
+
+    -- RETURN
+    -- -2: Day OFF
+    -- -1: User already register
+    -- 0: Seat is not available
+    -- 1: Seat is available and it's booked
+
+    -- DAY OFF : RETURN -2
+    SELECT COUNT(doctorID) INTO dayOff
+    FROM NonCheckingDay
+    WHERE NonCheckingDay.doctorID = doctorID AND NonCheckingDay.day = CURRENT_DATE;
+
+    IF dayOff > 0 THEN
+        SELECT -2;
+        LEAVE ThisSP;
+    END IF;
+
+    -- ALREADY REGISTER -1
+    SELECT COUNT(id) INTO registerNumber FROM RegisteringInfo WHERE RegisteringInfo.userId = userId AND targetDate = CURRENT_DATE;
+
+    IF registerNumber > 0 THEN
+        SELECT -1;
+        LEAVE ThisSP;
+    END IF;
+
+    -- SEAT NOT AVAILABLE: RETURN 0
+    SELECT SeatAvailable.status INTO seatStatus FROM SeatAvailable
+    WHERE day = CURRENT_DATE AND SeatAvailable.doctorID = doctorID AND SeatAvailable.seatID = seatID;
+
+    IF seatStatus THEN
+      SELECT 0;
+      LEAVE ThisSP;
+    ELSE
+      -- SEAT AVAILABLE: RETURN 1
+      START TRANSACTION;
+          UPDATE SeatAvailable SET SeatAvailable.status = 1, SeatAvailable.day = CURRENT_DATE
+          WHERE SeatAvailable.doctorID = doctorID AND SeatAvailable.seatID = seatID;
+
+          INSERT INTO RegisteringInfo (id, registeringTime, targetDate, userId, doctorID, registerNumber)
+                  VALUES (NULL, CURRENT_TIME, CURRENT_DATE, userID, doctorID, seatID);
+          SELECT 1;
+      COMMIT;
+    END IF;
+END
+
+DELIMITER ;
+
+DELIMITER $$
+--
+-- Procedures
+--
 CREATE DEFINER=`root`@`localhost` PROCEDURE `registerANumber` (IN `userID` VARCHAR(20), IN `doctorID` INT)
 ThisSP:BEGIN
   	DECLARE registerNumber INT default 1;
@@ -10,7 +66,7 @@ ThisSP:BEGIN
 
     SELECT COUNT(doctorID) INTO dayOff
     FROM NonCheckingDay
-    WHERE NonCheckingDay.doctorID = doctorID AND NonCheckingDay.date = CURRENT_DATE;
+    WHERE NonCheckingDay.doctorID = doctorID AND NonCheckingDay.day = CURRENT_DATE;
 
     IF dayOff > 0 THEN
         SELECT -1;
@@ -100,6 +156,35 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `goToNext` (IN `doctorID` INT, `next
 END$$
 
 DELIMITER ;
+
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `addAvailableSeat` (IN `doctorID` INT)  BEGIN
+    DECLARE count INT DEFAULT 1;
+    start transaction;
+      while count < 200 do
+        insert into SeatAvailable (doctorID, seat, status, day) values (doctorID, count, 0, CURRENT_DATE);
+        set count = count + 1;
+      end while;
+    commit;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `deleteAvailableSeat` (IN `doctorID` INT)  BEGIN
+    DECLARE count INT DEFAULT 1;
+    DELETE FROM SeatAvailable WHERE SeatAvailable.doctorID = doctorID;
+END$$
+
+DELIMITER ;
+
 
 call isUserRegisteredToday('isUserRegisteredToday')
 
