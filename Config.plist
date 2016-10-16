@@ -5,12 +5,14 @@
 	<key>serverURL</key>
 	<string>http://104.199.44.253/DangKyKhamBenh_SERVER/</string>
 	<key>localURL</key>
-	<string>http://Tams-MacBook-Pro.local:8080/DangKyKhamBenh_SERVER/</string>
+	<string>http://Tams-MacBook-Pro.local:8080/dkkb/</string>
 	<key>phpIsUserRegistered</key>
 	<string>userHasRegister.php</string>
 	<key>phpRegisterANumber</key>
 	<string>index.php</string>
 	<key>phpGetCurrentAndNext</key>
 	<string>getCurrentAndNext.php</string>
+	<key>phpGetSeatInfo</key>
+	<string>getSeatInfo.php</string>
 </dict>
 </plist>
