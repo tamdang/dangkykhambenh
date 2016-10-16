@@ -3,10 +3,27 @@ call requestAPresenseNumber('123',1)
 
 call bookASeat('123',1,4)
 
+SELECT tuts_rest.SeatAvailable.seatID, tuts_rest.SeatAvailable.status, tuts_rest.SeatAvailable.day
+FROM tuts_rest.SeatAvailable
+WHERE tuts_rest.SeatAvailable.doctorID = 1 AND tuts_rest.SeatAvailable.seatID < tuts_rest.getSeatSeperator()
+
+call getSeats(1)
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getSeats` (IN `doctorID` INT)
+BEGIN
+    SELECT tuts_rest.SeatAvailable.seatID, tuts_rest.SeatAvailable.status, tuts_rest.SeatAvailable.day
+    FROM tuts_rest.SeatAvailable
+    WHERE tuts_rest.SeatAvailable.doctorID = doctorID AND tuts_rest.SeatAvailable.seatID < tuts_rest.getSeatSeperator();
+END
+
+
+
 DELIMITER $$
 --
 -- Procedures
 --
+
+DROP PROCEDURE IF EXISTS bookASeat
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `bookASeat` (IN `userID` VARCHAR(20), `doctorID` INT, `seatID` SMALLINT)
 ThisSP:BEGIN
@@ -45,7 +62,8 @@ ThisSP:BEGIN
 
     -- SEAT REQUESTED IS OUT OF RANGE
     SELECT COUNT(SeatAvailable.id) INTO seatAvailableID FROM SeatAvailable
-    WHERE SeatAvailable.doctorID = doctorID AND tuts_rest.SeatAvailable.seatID = seatID;
+    WHERE SeatAvailable.doctorID = doctorID AND tuts_rest.SeatAvailable.seatID = seatID
+          AND tuts_rest.SeatAvailable.seatID < tuts_rest.getSeatSeperator();
 
     IF seatAvailableID < 1 THEN
         SELECT -3;
