@@ -66,9 +66,10 @@ class ViewController: UIViewController {
             if let userInfo = user as? [String:String] {
                 UserInfo.Instance.id = userInfo["id"]
                 UserInfo.Instance.name = userInfo["name"]
-                self.isUserRegistered()
+                self.getSeatInfo(doctorID: 1)
+//                self.isUserRegistered()
                 
-                self.getCurrentAndNext(doctorID: 0)
+//                self.getCurrentAndNext(doctorID: 0)
             }
         })
     }
@@ -178,6 +179,38 @@ class ViewController: UIViewController {
                     }
                 }
         }
+    }
+    
+    func getSeatInfo(doctorID: Int){
+        let parameters: Parameters = [
+            "doctorID": doctorID
+        ]
+        
+        let url : String = Config.Instance.serverURL + Config.Instance.phpGetSeatInfo
+        
+        Alamofire.request(
+            url,
+            method: .post,
+            parameters: parameters,
+            encoding: URLEncoding.httpBody).responseJSON { response in
+                if let urlContent = response.data {
+                    do {
+                        if let jsonArray = try JSONSerialization.jsonObject(with: urlContent, options:
+                            JSONSerialization.ReadingOptions.mutableContainers) as? NSArray{
+                            for json in jsonArray {
+                                if let seatInfo = json as? NSDictionary {
+                                    let seatID = seatInfo["i"] as! String;
+                                    let seatStatus = seatInfo["s"] as! String;
+                                    print("Seat ID: \(seatID), status: \(seatStatus)")
+                                }
+                            }
+                        }
+                    } catch {
+                        print("JSON Processing Failed")
+                    }
+                }
+        }
+
     }
     
     func getCurrentAndNext(doctorID: Int){

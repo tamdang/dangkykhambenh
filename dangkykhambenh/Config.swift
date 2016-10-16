@@ -17,6 +17,7 @@ class Config{
     let phpIsUserRegistered : String
     let phpRegisterANumber : String
     let phpGetCurrentAndNext : String
+    let phpGetSeatInfo : String
 
     static var Instance : Config = {
         
@@ -45,6 +46,8 @@ class Config{
         phpIsUserRegistered = plistData["phpIsUserRegistered"] as! String
         phpRegisterANumber = plistData["phpRegisterANumber"] as! String
         phpGetCurrentAndNext = plistData["phpGetCurrentAndNext"] as! String
+        phpGetSeatInfo = plistData["phpGetSeatInfo"] as! String
+        
     }
 
 }
