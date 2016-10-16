@@ -1,17 +1,24 @@
 
+call requestAPresenseNumber('123',1)
+
+call bookASeat('123',1,4)
+
 DELIMITER $$
 --
 -- Procedures
 --
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `bookASeat` (IN `userID` VARCHAR(20), `doctorID` INT, `seatID` SMALLINT)
 ThisSP:BEGIN
   	DECLARE registerNumber INT default 1;
     DECLARE dayOff INT default 1;
     DECLARE seatStatus BOOL DEFAULT FALSE;
+    DECLARE seatAvailableID BIGINT DEFAULT 0;
 
     -- RETURN
     -- -2: Day OFF
     -- -1: User already register
+    -- -3: Out of range
     -- 0: Seat is not available
     -- 1: Seat is available and it's booked
 
@@ -28,11 +35,20 @@ ThisSP:BEGIN
     -- ALREADY REGISTER -1
     SELECT COUNT(id) INTO registerNumber FROM RegisteringInfo
     WHERE RegisteringInfo.userId = userId AND targetDate = CURRENT_DATE
-          AND registerNumber < getSeatSeperator() AND RegisteringInfo.alreadyChecked >=0;
+          AND RegisteringInfo.registerNumber < getSeatSeperator() AND RegisteringInfo.alreadyChecked >=0;
 
     IF registerNumber > 0 THEN
 
         SELECT -1;
+        LEAVE ThisSP;
+    END IF;
+
+    -- SEAT REQUESTED IS OUT OF RANGE
+    SELECT COUNT(SeatAvailable.id) INTO seatAvailableID FROM SeatAvailable
+    WHERE SeatAvailable.doctorID = doctorID AND tuts_rest.SeatAvailable.seatID = seatID;
+
+    IF seatAvailableID < 1 THEN
+        SELECT -3;
         LEAVE ThisSP;
     END IF;
 
@@ -56,6 +72,7 @@ ThisSP:BEGIN
     END IF;
 END
 
+
 DELIMITER ;
 
 
@@ -63,7 +80,7 @@ DELIMITER $$
 --
 -- Procedures
 --
-DROP PROCEDURE IF EXISTS requestANumber
+DROP PROCEDURE IF EXISTS requestAPresenseNumber
 CREATE DEFINER=`root`@`localhost` PROCEDURE `requestANumber` (IN `userID` VARCHAR(20), IN `doctorID` INT)
 BEGIN
     DECLARE ID BIGINT;
