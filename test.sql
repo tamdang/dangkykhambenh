@@ -261,6 +261,105 @@ END
 
 DELIMITER ;
 
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS CONST_AVAILABLE
+CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_AVAILABLE` ()
+RETURNS TINYINT UNSIGNED
+BEGIN
+RETURN 0;
+END
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS CONST_BOOKED
+CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_BOOKED` ()
+RETURNS TINYINT UNSIGNED
+BEGIN
+RETURN 1;
+END
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS CONST_CHECKED
+CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_CHECKED` ()
+RETURNS TINYINT UNSIGNED
+BEGIN
+RETURN 2;
+END
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS CONST_SKIPPED
+CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_SKIPPED` ()
+RETURNS TINYINT UNSIGNED
+BEGIN
+RETURN 3;
+END
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS CONST_OUT_OF_RANGE
+CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_OUT_OF_RANGE` ()
+RETURNS TINYINT UNSIGNED
+BEGIN
+RETURN 4;
+END
+
+DELIMITER ;
+
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS getSeatStatus
+CREATE DEFINER=`root`@`localhost` FUNCTION `getSeatStatus` (`doctorID` INT, `seatID` SMALLINT)
+RETURNS TINYINT UNSIGNED
+BEGIN
+  DECLARE count TINYINT;
+  DECLARE seatStatus TINYINT;
+
+  SELECT COUNT(tuts_rest.SeatAvailable.id) INTO count
+    FROM  tuts_rest.SeatAvailable
+    WHERE tuts_rest.SeatAvailable.doctorID = doctorID AND tuts_rest.SeatAvailable.seatID = seatID
+      AND tuts_rest.SeatAvailable.day != CURRENT_DATE;
+
+  IF count > 0 THEN
+        RETURN tuts_rest.CONST_AVAILABLE();
+  END IF;
+
+  SELECT tuts_rest.SeatAvailable.status INTO seatStatus FROM tuts_rest.SeatAvailable
+    WHERE SeatAvailable.doctorID = doctorID AND SeatAvailable.seatID = seatID
+      AND tuts_rest.SeatAvailable.day = CURRENT_DATE;
+
+  RETURN seatStatus;
+
+END
+
+DELIMITER ;
+
+UPDATE tuts_rest.SeatAvailable SET SeatAvailable.status = tuts_rest.CONST_CHECKED()
+  WHERE tuts_rest.SeatAvailable.doctorID = 1 AND tuts_rest.SeatAvailable.day = CURRENT_DATE
+
+IF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_AVAILABLE() THEN
+  SELECT "AVAILABLE";
+ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_BOOKED() THEN
+  SELECT "BOOOKED";
+ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_SKIPPED() THEN
+  SELECT "SKIPPED";
+ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_CHECKED() THEN
+  SELECT "CHECKED";
+ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_OUT_OF_RANGE() THEN
+  SELECT "OUT OF RANGE";
+END IF
+
 
 call isUserRegisteredToday('isUserRegisteredToday')
 
