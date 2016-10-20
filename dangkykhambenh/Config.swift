@@ -18,6 +18,7 @@ class Config{
     let phpRegisterANumber : String
     let phpGetCurrentAndNext : String
     let phpGetSeatInfo : String
+    let phpBookASeat : String
 
     static var Instance : Config = {
         
@@ -47,7 +48,7 @@ class Config{
         phpRegisterANumber = plistData["phpRegisterANumber"] as! String
         phpGetCurrentAndNext = plistData["phpGetCurrentAndNext"] as! String
         phpGetSeatInfo = plistData["phpGetSeatInfo"] as! String
-        
+        phpBookASeat = plistData["phpBookASeat"] as! String
     }
 
 }

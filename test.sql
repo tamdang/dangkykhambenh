@@ -23,71 +23,79 @@ DELIMITER $$
 -- Procedures
 --
 
+update tuts_rest.RegisteringInfo set checkResult = NULL
+update tuts_rest.NonCheckingDay set tuts_rest.NonCheckingDay.day = CURRENT_DATE
+
+
+update tuts_rest.SeatAvailable set SeatAvailable.day = CURRENT_DATE where id = 5
+update NonCheckingDay set tuts_rest.NonCheckingDay.day = '2016-10-19'
+
+select getSeatStatus(1,2)
+call bookASeat('abcdefghij',1,6)
+call bookASeat('123',1,1)
+
+
 DROP PROCEDURE IF EXISTS bookASeat
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `bookASeat` (IN `userID` VARCHAR(20), `doctorID` INT, `seatID` SMALLINT)
 ThisSP:BEGIN
-  	DECLARE registerNumber INT default 1;
+  	DECLARE registerNumber BIGINT default 1;
     DECLARE dayOff INT default 1;
-    DECLARE seatStatus BOOL DEFAULT FALSE;
     DECLARE seatAvailableID BIGINT DEFAULT 0;
 
     -- RETURN
     -- -2: Day OFF
-    -- -1: User already register
+    -- -1: User already in the waiting list
     -- -3: Out of range
     -- 0: Seat is not available
     -- 1: Seat is available and it's booked
 
-    -- DAY OFF : RETURN -2
+    -- IF CURRUNT_DATE is day off
     SELECT COUNT(doctorID) INTO dayOff
     FROM NonCheckingDay
     WHERE NonCheckingDay.doctorID = doctorID AND NonCheckingDay.day = CURRENT_DATE;
 
     IF dayOff > 0 THEN
-        SELECT -2;
+        SELECT tuts_rest.RET_DAY_OFF();
         LEAVE ThisSP;
     END IF;
 
-    -- ALREADY REGISTER -1
-    SELECT COUNT(id) INTO registerNumber FROM RegisteringInfo
-    WHERE RegisteringInfo.userId = userId AND targetDate = CURRENT_DATE
-          AND RegisteringInfo.registerNumber < getSeatSeperator() AND RegisteringInfo.alreadyChecked >=0;
+    -- If user is in the waiting list
+    SELECT COUNT(RegisteringInfo.id) INTO registerNumber FROM RegisteringInfo
+    WHERE RegisteringInfo.userId = userId AND tuts_rest.RegisteringInfo.targetDate = CURRENT_DATE AND RegisteringInfo.doctorID = doctorID
+          AND RegisteringInfo.registerNumber < getSeatSeperator()
+          AND tuts_rest.RegisteringInfo.checkResult IS NULL;
 
     IF registerNumber > 0 THEN
-
-        SELECT -1;
+        SELECT tuts_rest.RET_ALREADY_REGISTER();
         LEAVE ThisSP;
     END IF;
 
-    -- SEAT REQUESTED IS OUT OF RANGE
-    SELECT COUNT(SeatAvailable.id) INTO seatAvailableID FROM SeatAvailable
-    WHERE SeatAvailable.doctorID = doctorID AND tuts_rest.SeatAvailable.seatID = seatID
-          AND tuts_rest.SeatAvailable.seatID < tuts_rest.getSeatSeperator();
+    CASE tuts_rest.getSeatStatus(doctorID,seatID)
+      WHEN tuts_rest.CONST_AVAILABLE() THEN
+        BEGIN
+          START TRANSACTION;
+            UPDATE SeatAvailable
+            SET SeatAvailable.status = tuts_rest.CONST_BOOKED(), SeatAvailable.day = CURRENT_DATE
+            WHERE SeatAvailable.doctorID = doctorID AND SeatAvailable.seatID = seatID;
 
-    IF seatAvailableID < 1 THEN
-        SELECT -3;
-        LEAVE ThisSP;
-    END IF;
-
-    -- SEAT NOT AVAILABLE: RETURN 0
-    SELECT SeatAvailable.status INTO seatStatus FROM SeatAvailable
-    WHERE day = CURRENT_DATE AND SeatAvailable.doctorID = doctorID AND SeatAvailable.seatID = seatID;
-
-    IF seatStatus THEN
-      SELECT 0;
-      LEAVE ThisSP;
-    ELSE
-      -- SEAT AVAILABLE: RETURN 1
-      START TRANSACTION;
-          UPDATE SeatAvailable SET SeatAvailable.status = 1, SeatAvailable.day = CURRENT_DATE
-          WHERE SeatAvailable.doctorID = doctorID AND SeatAvailable.seatID = seatID;
-
-          INSERT INTO RegisteringInfo (id, registeringTime, targetDate, userId, doctorID, registerNumber)
-                  VALUES (NULL, CURRENT_TIME, CURRENT_DATE, userID, doctorID, seatID);
-          SELECT 1;
-      COMMIT;
-    END IF;
+            INSERT INTO RegisteringInfo (id, registeringTime, targetDate, userId, doctorID, registerNumber, checkResult)
+                    VALUES (NULL, CURRENT_TIME, CURRENT_DATE, userID, doctorID, seatID, NULL);
+            SELECT tuts_rest.RET_BOOK_OK();
+          COMMIT;
+          LEAVE ThisSP;
+        END;
+      WHEN tuts_rest.RET_SEAT_OUT_OF_RANGE() THEN
+        BEGIN
+          SELECT tuts_rest.RET_SEAT_OUT_OF_RANGE();
+          LEAVE ThisSP;
+        END;
+      ELSE
+        BEGIN
+          SELECT tuts_rest.RET_SEAT_NOT_AVAILABLE();
+          LEAVE ThisSP;
+        END;
+    END CASE;
 END
 
 
@@ -180,14 +188,16 @@ DELIMITER $$
 --
 -- Procedures
 --
+
+DROP PROCEDURE IF EXISTS getCurrentAndNext
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getCurrentAndNext` (IN `doctorID` INT)  BEGIN
     SELECT registerNumber FROM RegisteringInfo
     WHERE RegisteringInfo.doctorID = doctorID AND checkin = 1
           AND targetDate = CURRENT_DATE AND DATE(checkintime) = CURRENT_DATE
-          AND alreadyChecked = 0
+          AND checkResult = 0
     ORDER BY checkintime
     LIMIT 2;
-END$$
+END
 
 DELIMITER ;
 
@@ -195,11 +205,12 @@ DELIMITER $$
 --
 -- Procedures
 --
+DROP PROCEDURE IF EXISTS getWaitingList
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getWaitingList` (IN `doctorID` INT)  BEGIN
     SELECT registerNumber FROM RegisteringInfo
     WHERE RegisteringInfo.doctorID = doctorID AND checkin = 1
         AND targetDate = CURRENT_DATE AND DATE(checkintime) = CURRENT_DATE
-        AND alreadyChecked = 0
+        AND checkResult = 0
     ORDER BY checkintime;
 END$$
 
@@ -209,15 +220,17 @@ DELIMITER $$
 --
 -- Procedures
 --
+
+DROP PROCEDURE IF EXISTS goToNext
 CREATE DEFINER=`root`@`localhost` PROCEDURE `goToNext` (IN `doctorID` INT, `nextOrSkip` TINYINT)  BEGIN
     DECLARE id BIGINT;
     SELECT RegisteringInfo.ID INTO id FROM RegisteringInfo
     WHERE RegisteringInfo.doctorID = doctorID AND checkin = 1
           AND targetDate = CURRENT_DATE AND DATE(checkintime) = CURRENT_DATE
-          AND alreadyChecked = 0
+          AND checkResult = 0
     ORDER BY checkintime
     LIMIT 1;
-    UPDATE RegisteringInfo SET alreadyChecked = nextOrSkip WHERE RegisteringInfo.id = id;
+    UPDATE RegisteringInfo SET checkResult = nextOrSkip WHERE RegisteringInfo.id = id;
 END$$
 
 DELIMITER ;
@@ -265,7 +278,7 @@ DELIMITER $$
 
 DROP FUNCTION IF EXISTS CONST_AVAILABLE
 CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_AVAILABLE` ()
-RETURNS TINYINT UNSIGNED
+RETURNS TINYINT
 BEGIN
 RETURN 0;
 END
@@ -274,9 +287,21 @@ DELIMITER ;
 
 DELIMITER $$
 
+DROP FUNCTION IF EXISTS RET_SEAT_NOT_AVAILABLE
+CREATE DEFINER=`root`@`localhost` FUNCTION `RET_SEAT_NOT_AVAILABLE` ()
+RETURNS TINYINT
+BEGIN
+RETURN 0;
+END
+
+DELIMITER ;
+
+
+DELIMITER $$
+
 DROP FUNCTION IF EXISTS CONST_BOOKED
 CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_BOOKED` ()
-RETURNS TINYINT UNSIGNED
+RETURNS TINYINT
 BEGIN
 RETURN 1;
 END
@@ -285,11 +310,34 @@ DELIMITER ;
 
 DELIMITER $$
 
+DROP FUNCTION IF EXISTS RET_BOOK_OK
+CREATE DEFINER=`root`@`localhost` FUNCTION `RET_BOOK_OK` ()
+RETURNS TINYINT
+BEGIN
+RETURN 1;
+END
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS RET_DAY_OFF
+CREATE DEFINER=`root`@`localhost` FUNCTION `RET_DAY_OFF` ()
+RETURNS TINYINT
+BEGIN
+RETURN -2;
+END
+
+DELIMITER ;
+
+
+DELIMITER $$
+
 DROP FUNCTION IF EXISTS CONST_CHECKED
 CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_CHECKED` ()
-RETURNS TINYINT UNSIGNED
+RETURNS TINYINT
 BEGIN
-RETURN 2;
+RETURN 1;
 END
 
 DELIMITER ;
@@ -298,39 +346,60 @@ DELIMITER $$
 
 DROP FUNCTION IF EXISTS CONST_SKIPPED
 CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_SKIPPED` ()
-RETURNS TINYINT UNSIGNED
+RETURNS TINYINT
 BEGIN
-RETURN 3;
+RETURN -1;
 END
 
 DELIMITER ;
 
 DELIMITER $$
 
-DROP FUNCTION IF EXISTS CONST_OUT_OF_RANGE
-CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_OUT_OF_RANGE` ()
-RETURNS TINYINT UNSIGNED
+DROP FUNCTION IF EXISTS RET_ALREADY_REGISTER
+CREATE DEFINER=`root`@`localhost` FUNCTION `RET_ALREADY_REGISTER` ()
+RETURNS TINYINT
 BEGIN
-RETURN 4;
+RETURN -1;
 END
 
 DELIMITER ;
 
 
 DELIMITER $$
+
+DROP FUNCTION IF EXISTS RET_SEAT_OUT_OF_RANGE
+CREATE DEFINER=`root`@`localhost` FUNCTION `RET_SEAT_OUT_OF_RANGE` ()
+RETURNS TINYINT
+BEGIN
+RETURN -3;
+END
+
+DELIMITER ;
+
+
+DELIMITER $$
+
+update SeatAvailable set tuts_rest.SeatAvailable.day = CURRENT_DATE where tuts_rest.SeatAvailable.id = 2
+
+select getSeatStatus(1,-1)
 
 DROP FUNCTION IF EXISTS getSeatStatus
 CREATE DEFINER=`root`@`localhost` FUNCTION `getSeatStatus` (`doctorID` INT, `seatID` SMALLINT)
-RETURNS TINYINT UNSIGNED
+RETURNS TINYINT
 BEGIN
   DECLARE count TINYINT;
   DECLARE seatStatus TINYINT;
+
+  SELECT COUNT(tuts_rest.SeatAvailable.id) into count FROM tuts_rest.SeatAvailable
+    WHERE SeatAvailable.doctorID = doctorID AND SeatAvailable.seatID = seatID;
+  IF count < 1 THEN
+      RETURN tuts_rest.RET_SEAT_OUT_OF_RANGE();
+  END IF;
 
   SELECT COUNT(tuts_rest.SeatAvailable.id) INTO count
     FROM  tuts_rest.SeatAvailable
     WHERE tuts_rest.SeatAvailable.doctorID = doctorID AND tuts_rest.SeatAvailable.seatID = seatID
       AND tuts_rest.SeatAvailable.day != CURRENT_DATE;
-
   IF count > 0 THEN
         RETURN tuts_rest.CONST_AVAILABLE();
   END IF;
@@ -345,8 +414,11 @@ END
 
 DELIMITER ;
 
-UPDATE tuts_rest.SeatAvailable SET SeatAvailable.status = tuts_rest.CONST_CHECKED()
-  WHERE tuts_rest.SeatAvailable.doctorID = 1 AND tuts_rest.SeatAvailable.day = CURRENT_DATE
+UPDATE tuts_rest.SeatAvailable SET tuts_rest.SeatAvailable.day = DATE('2016-10-17')
+WHERE tuts_rest.SeatAvailable.doctorID = 1
+
+UPDATE tuts_rest.SeatAvailable SET SeatAvailable.status = tuts_rest.CONST_BOOKED()
+  WHERE tuts_rest.SeatAvailable.doctorID = 1-- AND tuts_rest.SeatAvailable.day = DATE('2016-10-17');
 
 IF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_AVAILABLE() THEN
   SELECT "AVAILABLE";
@@ -356,14 +428,16 @@ ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_SKIPPED() THEN
   SELECT "SKIPPED";
 ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_CHECKED() THEN
   SELECT "CHECKED";
-ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_OUT_OF_RANGE() THEN
+ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.RET_SEAT_OUT_OF_RANGE() THEN
   SELECT "OUT OF RANGE";
 END IF
 
+call bookASeat('abcde',1,4)
 
 call isUserRegisteredToday('isUserRegisteredToday')
 
 call registerANumber('1234')
 call checkin('1234')
 
-UPDATE RegisteringInfo SET checkin = 1, alreadyChecked = 1 where id = 30
+update tuts_rest.SeatAvailable set tuts_rest.SeatAvailable.status = 0
+  where tuts_rest.SeatAvailable.id = 2

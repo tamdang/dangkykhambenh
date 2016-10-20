@@ -14,5 +14,7 @@
 	<string>getCurrentAndNext.php</string>
 	<key>phpGetSeatInfo</key>
 	<string>getSeatInfo.php</string>
+	<key>phpBookASeat</key>
+	<string>bookASeat.php</string>
 </dict>
 </plist>

@@ -51,11 +51,6 @@ class TableController: UITableViewController {
                                     d["seatStatus"] = seatStatus;
                                     self.tableData.append(d)
                                 }
-//                                if let seatInfo = json as? NSDictionary {
-//                                    let seatID = seatInfo["i"] as! String;
-//                                    let seatStatus = seatInfo["s"] as! String;
-//                                    print("Seat ID: \(seatID), status: \(seatStatus)")
-//                                }
                             }
                             
                             DispatchQueue.main.async {
@@ -99,15 +94,59 @@ class TableController: UITableViewController {
     }
  
 
-    /*
+    
     // Override to support conditional editing of the table view.
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         // Return false if you do not want the specified item to be editable.
         return true
     }
-    */
+    
+    
+    func bookASeat(userID: String, doctorID : Int, seatID : Int){
+        let parameters: Parameters = [
+            "doctorID": doctorID,
+            "userID" : userID,
+            "seatID" : seatID
+        ]
+        
+        let url : String = Config.Instance.serverURL + Config.Instance.phpBookASeat
+        
+        Alamofire.request(
+            url,
+            method: .post,
+            parameters: parameters,
+            encoding: URLEncoding.httpBody).responseJSON { response in
+                if let urlContent = response.data {
+                    do {
+                        if let json = try JSONSerialization.jsonObject(with: urlContent, options:
+                        JSONSerialization.ReadingOptions.mutableContainers) as? [String:String]{
+                            if let message = json["msg"] {
+                                let alertController = UIAlertController(title: self.title, message: message, preferredStyle:UIAlertControllerStyle.alert)
+                                alertController.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default)
+                                { action -> Void in
+                                    
+                                    // Put your code here
+                                })
+                                self.present(alertController, animated: true, completion: nil)
+                            }
+                            
+                            
+                        }
+                    } catch {
+                        print("JSON Processing Failed")
+                    }
+                }
+        }
 
-    /*
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+
+        let diceRoll = Int(arc4random_uniform(1000000) + 1)
+        
+        bookASeat(userID: String(diceRoll) , doctorID: 1, seatID: Int(self.tableData[indexPath.row]["seatID"]!)!)
+    }
+
     // Override to support editing the table view.
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
@@ -115,9 +154,8 @@ class TableController: UITableViewController {
             tableView.deleteRows(at: [indexPath], with: .fade)
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+        }
     }
-    */
 
     /*
     // Override to support rearranging the table view.
