@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1E1852230B04F4EBAB80207F /* Pods_dangkykhambenh.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D992E4920AFA69BB0114D1CD /* Pods_dangkykhambenh.framework */; };
+		39820C071DBFB0B10008A259 /* HMAC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39820C061DBFB0B10008A259 /* HMAC.swift */; };
 		39A884281D9588D3006E5BCC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39A884271D9588D3006E5BCC /* AppDelegate.swift */; };
 		39A8842A1D9588D3006E5BCC /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39A884291D9588D3006E5BCC /* ViewController.swift */; };
 		39A8842D1D9588D3006E5BCC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 39A8842B1D9588D3006E5BCC /* Main.storyboard */; };
@@ -40,6 +41,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		39820C011DBF95B70008A259 /* dangkykhambenh-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "dangkykhambenh-Bridging-Header.h"; sourceTree = "<group>"; };
+		39820C061DBFB0B10008A259 /* HMAC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HMAC.swift; sourceTree = "<group>"; };
 		3991BF821DA4AD7F00D4484C /* dangkykhambenh.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = dangkykhambenh.entitlements; sourceTree = "<group>"; };
 		39A884241D9588D3006E5BCC /* dangkykhambenh.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = dangkykhambenh.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		39A884271D9588D3006E5BCC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -127,6 +130,8 @@
 				39A884361D9588D3006E5BCC /* Info.plist */,
 				39A8842E1D9588D3006E5BCC /* dangkykhambenh.xcdatamodeld */,
 				39E67E511DA87E8F009A692B /* UserInfo.swift */,
+				39820C011DBF95B70008A259 /* dangkykhambenh-Bridging-Header.h */,
+				39820C061DBFB0B10008A259 /* HMAC.swift */,
 			);
 			path = dangkykhambenh;
 			sourceTree = "<group>";
@@ -366,6 +371,7 @@
 				39A8842A1D9588D3006E5BCC /* ViewController.swift in Sources */,
 				39ED60DD1DAA3CA900164B29 /* Config.swift in Sources */,
 				39A884301D9588D3006E5BCC /* dangkykhambenh.xcdatamodeld in Sources */,
+				39820C071DBFB0B10008A259 /* HMAC.swift in Sources */,
 				39A884281D9588D3006E5BCC /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -527,6 +533,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tamdang.dangkykhambenh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "dangkykhambenh/dangkykhambenh-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};

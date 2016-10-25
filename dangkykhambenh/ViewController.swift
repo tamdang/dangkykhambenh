@@ -257,5 +257,16 @@ class ViewController: UIViewController {
         }
     }
 
+    @IBAction func unwindToSetting(sender: UIStoryboardSegue){
+        if sender.source is TableController{
+            print("BACK FROM TableController unwindToSetting")
+        }
+    }
+//
+//    @IBAction func unwindToLogin(sender: UIStoryboardSegue){
+//        if sender.source is TableController{
+//            print("BACK FROM TableController unwindToLogin")
+//        }
+//    }
 }
 

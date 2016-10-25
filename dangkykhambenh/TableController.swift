@@ -11,7 +11,15 @@ import Alamofire
 
 class TableController: UITableViewController {
 
+    @IBOutlet weak var login: UIBarButtonItem!
     var tableData : [[String:String]] = [[String:String]]()
+    
+    // MARK: Navigation
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if sender as? UIBarButtonItem === login {
+            print("LOGIN BUTTON SELECTED")
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,17 +35,30 @@ class TableController: UITableViewController {
     
     
     func getSeatInfo(doctorID: Int){
-        let parameters: Parameters = [
-            "doctorID": doctorID
-        ]
+//        let parameters: Parameters = [
+//            "doctorID": doctorID
+//        ]
         
-        let url : String = Config.Instance.serverURL + Config.Instance.phpGetSeatInfo
+        let url : String = Config.Instance.serverURL + "getSeats/" + String(doctorID)
+        let publicHash = "e249c439ed7697df2a4b045d97d4b9b7e1854c3ff8dd668c779013653913573a"
+        let privateHash = "e249c439ed7697df2a4b045d97d4b9b7e1854c3ff8dd668c779013653913572e"
+        let content = "dkkb"
+        
+        
+        let hash : String = content.digest(algorithm: .SHA256, key: privateHash)
+        
+        let header = [
+            "X-Public" : publicHash,
+            "X-Hash" : hash,
+            "content" : content
+        ];
         
         Alamofire.request(
             url,
-            method: .post,
-            parameters: parameters,
-            encoding: URLEncoding.httpBody).responseJSON { response in
+            method: .get,
+            parameters: nil,
+            encoding: URLEncoding.httpBody,
+            headers:header ).responseJSON { response in
                 if let urlContent = response.data {
                     do {
                         if let jsonArray = try JSONSerialization.jsonObject(with: urlContent, options:
