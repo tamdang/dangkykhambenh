@@ -47,6 +47,18 @@ enum HMACAlgorithm {
         }
         return Int(result)
     }
+    
+    static private let publicHash = "d1f830fc2233e06762caf8bf5185205ed796027bb1a17ef2b748b545c8696923"
+    static private let privateKey = "b3565d37723f653cc39054d71d7398d9ac5b9ffa6073e83b65c4c81ecad2d73d"
+    static private let hashContent = "c4f943484a97b9d978a206011eb0f876380dd8c053b238eca604ec79de940dc7"
+    static private let content = "e2eaae785a40bd7f0de1adcc5bfd9b7abf123b889a278b370d3e58e33b8ae059"
+    
+    static let header = [
+        "X-Public" : HMACAlgorithm.publicHash,
+        "X-Hash" : HMACAlgorithm.hashContent,
+        "content" : HMACAlgorithm.content
+    ];
+    
 }
 
 extension String {

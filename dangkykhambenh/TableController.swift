@@ -40,25 +40,13 @@ class TableController: UITableViewController {
 //        ]
         
         let url : String = Config.Instance.serverURL + "getSeats/" + String(doctorID)
-        let publicHash = "e249c439ed7697df2a4b045d97d4b9b7e1854c3ff8dd668c779013653913573a"
-        let privateHash = "e249c439ed7697df2a4b045d97d4b9b7e1854c3ff8dd668c779013653913572e"
-        let content = "dkkb"
-        
-        
-        let hash : String = content.digest(algorithm: .SHA256, key: privateHash)
-        
-        let header = [
-            "X-Public" : publicHash,
-            "X-Hash" : hash,
-            "content" : content
-        ];
-        
+
         Alamofire.request(
             url,
             method: .get,
             parameters: nil,
             encoding: URLEncoding.httpBody,
-            headers:header ).responseJSON { response in
+            headers:HMACAlgorithm.header ).responseJSON { response in
                 if let urlContent = response.data {
                     do {
                         if let jsonArray = try JSONSerialization.jsonObject(with: urlContent, options:
