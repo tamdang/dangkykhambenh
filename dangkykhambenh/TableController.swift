@@ -39,7 +39,9 @@ class TableController: UITableViewController {
 //            "doctorID": doctorID
 //        ]
         
-        let url : String = Config.Instance.serverURL + "getSeats/" + String(doctorID)
+//        let url : String = Config.Instance.serverURL + "getSeats/" + String(doctorID)
+        
+        let url : String = Config.Instance.serverURL + Config.Instance.phpGetSeatInfo + String(doctorID)
 
         Alamofire.request(
             url,
@@ -120,11 +122,14 @@ class TableController: UITableViewController {
         
         let url : String = Config.Instance.serverURL + Config.Instance.phpBookASeat
         
+//        let url : String = Config.Instance.serverURL + "bookASeat"
+        
         Alamofire.request(
             url,
             method: .post,
             parameters: parameters,
-            encoding: URLEncoding.httpBody).responseJSON { response in
+            encoding: URLEncoding.httpBody,
+            headers:HMACAlgorithm.header).responseJSON { response in
                 if let urlContent = response.data {
                     do {
                         if let json = try JSONSerialization.jsonObject(with: urlContent, options:

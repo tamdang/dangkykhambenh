@@ -13,8 +13,8 @@
 	<key>phpGetCurrentAndNext</key>
 	<string>getCurrentAndNext.php</string>
 	<key>phpGetSeatInfo</key>
-	<string>getSeatInfo.php</string>
+	<string>getSeats/</string>
 	<key>phpBookASeat</key>
-	<string>bookASeat.php</string>
+	<string>bookASeat</string>
 </dict>
 </plist>
