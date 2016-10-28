@@ -16,5 +16,7 @@
 	<string>getSeats/</string>
 	<key>phpBookASeat</key>
 	<string>bookASeat</string>
+	<key>phpRequestAPresenseNumber</key>
+	<string>requestAPresenseNumber</string>
 </dict>
 </plist>

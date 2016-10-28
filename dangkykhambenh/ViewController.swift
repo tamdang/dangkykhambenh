@@ -115,29 +115,30 @@ class ViewController: UIViewController {
             return
         }
         
-        registerANumber()
+        requestAPresenseNumber(userID: UserInfo.Instance.id!, doctorID: 1)
     }
     
-    func registerANumber(){
+    func requestAPresenseNumber(userID:String, doctorID: Int){
 
         let parameters: Parameters = [
-            "id": UserInfo.Instance.id!,
-            "doctorID": 0
+            "userID": userID,
+            "doctorID": doctorID
         ]
         
-        let url : String = Config.Instance.serverURL + Config.Instance.phpRegisterANumber
+        let url : String = Config.Instance.serverURL + Config.Instance.phpRequesetAPresenseNumber
         
         Alamofire.request(
             url,
             method: .post,
             parameters: parameters,
-            encoding: URLEncoding.httpBody).responseJSON { response in
+            encoding: URLEncoding.httpBody,
+            headers:HMACAlgorithm.header).responseJSON { response in
                 if let urlContent = response.data {
                     do {
                         let jsonResult = try JSONSerialization.jsonObject(with: urlContent, options:
-                            JSONSerialization.ReadingOptions.mutableContainers) as! Dictionary<String, AnyObject>
+                            JSONSerialization.ReadingOptions.mutableContainers) as! Dictionary<String, String>
                         
-                        if let registerNumber = Int(jsonResult["msg"] as! String){
+                        if let registerNumber = Int(jsonResult["msg"]!){
                             if registerNumber < 0 {
                                 self.textMessage.text = "DAY OFF"
                             }
@@ -171,7 +172,7 @@ class ViewController: UIViewController {
                         
                         if let rowCount = Int(jsonResult["msg"] as! String){
                             if rowCount > 0 {
-                                self.registerANumber()
+                                self.requestAPresenseNumber(userID: UserInfo.Instance.id!, doctorID: 1)
                             }
                         }
                     } catch {
