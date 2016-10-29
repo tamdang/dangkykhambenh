@@ -203,17 +203,30 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `checkIn` (IN `userID` INT, `doctorI
       AND tuts_rest.RegisteringInfo.targetDate = CURRENT_DATE;
 END
 
+update DoctorInfo set planServing = 1
+call goToNext(1,1)
+call checkIn(777941,1)
+
+
+DROP PROCEDURE IF EXISTS start
+CREATE DEFINER=`root`@`localhost` PROCEDURE `start` (IN `doctorID` INT)  BEGIN
+    UPDATE tuts_rest.RegisteringInfo
+    SET tuts_rest.RegisteringInfo.checkin = TRUE
+    WHERE tuts_rest.RegisteringInfo.userId = userID AND tuts_rest.RegisteringInfo.doctorID = doctorID
+      AND tuts_rest.RegisteringInfo.targetDate = CURRENT_DATE;
+END
+
 DROP PROCEDURE IF EXISTS `goToNext`
-CREATE DEFINER=`root`@`localhost` PROCEDURE `goToNext` (IN `doctorID` INT, `nextOrSkip` TINYINT)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `goToNext` (IN `doctorID` BIGINT, `nextOrSkip` TINYINT)  BEGIN
     DECLARE planServing SMALLINT;
     DECLARE actualServing SMALLINT;
     DECLARE alreadyCheckedIn TINYINT DEFAULT 0;
     DECLARE registerNumber SMALLINT DEFAULT 0;
     DECLARE countResult SMALLINT DEFAULT 0;
 
-    SELECT tuts_rest.DoctorInfo.planServing into planServing, tuts_rest.DoctorInfo.actualServing into actualServing
-    FROM tuts_rest.DoctorInfo
-    where tuts_rest.DoctorInfo.doctorID = doctorID;
+    SELECT tuts_rest.DoctorInfo.planServing, tuts_rest.DoctorInfo.actualServing into planServing, actualServing
+    FROM DoctorInfo
+    where doctorID = doctorID;
 
     start transaction;
       -- update checkResult in the RegisteringInfo
@@ -245,21 +258,21 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `goToNext` (IN `doctorID` INT, `next
       -- regisetering number is not yet check in OR there is no one register the planServing seat
       ELSE
         BEGIN
-          SELECT COUNT (tuts_rest.RegisteringInfo.id) into countResult, tuts_rest.RegisteringInfo.registerNumber into registerNumber
+          SELECT COUNT (tuts_rest.RegisteringInfo.id), tuts_rest.RegisteringInfo.registerNumber into countResult, registerNumber
           FROM tuts_rest.RegisteringInfo
-          WHERE tuts_rest.RegisteringInfo.registerNumber > tuts_rest.getSeatSeperator() AND tuts_rest.RegisteringInfo.doctorID = doctorID
+          WHERE tuts_rest.RegisteringInfo.registerNumber > tuts_rest.getSeatSeperator() AND tuts_rest.RegisteringInfo.doctorID = 1
             AND tuts_rest.RegisteringInfo.checkin = TRUE AND tuts_rest.RegisteringInfo.targetDate = CURRENT_DATE
             AND tuts_rest.RegisteringInfo.checkResult IS NULL
           ORDER BY tuts_rest.RegisteringInfo.registerNumber ASC
           LIMIT 1;
-          --2. if there is one presenseNumber which is already check in today for this doctor
+          -- 2. if there is one presenseNumber which is already check in today for this doctor
           IF countResult > 0 THEN
             UPDATE tuts_rest.DoctorInfo
             SET tuts_rest.DoctorInfo.actualServing = registerNumber
             WHERE tuts_rest.DoctorInfo.doctorID = doctorID;
           ELSE
             BEGIN
-              SELECT COUNT (tuts_rest.RegisteringInfo.id) into countResult, tuts_rest.RegisteringInfo.registerNumber into registerNumber
+              SELECT COUNT (tuts_rest.RegisteringInfo.id), tuts_rest.RegisteringInfo.registerNumber into countResult, registerNumber
               FROM tuts_rest.RegisteringInfo
               WHERE tuts_rest.RegisteringInfo.registerNumber < tuts_rest.getSeatSeperator() AND tuts_rest.RegisteringInfo.doctorID = doctorID
                 AND tuts_rest.RegisteringInfo.checkin = TRUE AND tuts_rest.RegisteringInfo.targetDate = CURRENT_DATE
