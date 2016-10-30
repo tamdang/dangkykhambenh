@@ -1,19 +1,4 @@
-select * from tuts_rest.SeatAvailable
-where tuts_rest.SeatAvailable.doctorID = 1 AND tuts_rest.SeatAvailable.day = CURRENT_DATE AND tuts_rest.SeatAvailable.status = 1
-AND tuts_rest.SeatAvailable.visitResult IS NULL
-ORDER BY seatID ASC
-limit 1
-
-
-call requestAPresenseNumber('123',1)
-
-call bookASeat('123',1,4)
-
-SELECT tuts_rest.SeatAvailable.seatID, tuts_rest.SeatAvailable.status, tuts_rest.SeatAvailable.day
-FROM tuts_rest.SeatAvailable
-WHERE tuts_rest.SeatAvailable.doctorID = 1 AND tuts_rest.SeatAvailable.seatID < tuts_rest.getSeatSeperator()
-
-call getSeats(1)
+select * from tuts_rest.RegisteringInfo order by tuts_rest.RegisteringInfo.id DESC limit 10
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getSeats` (IN `doctorID` INT)
 BEGIN
@@ -22,27 +7,7 @@ BEGIN
     WHERE tuts_rest.SeatAvailable.doctorID = doctorID AND tuts_rest.SeatAvailable.seatID < tuts_rest.getSeatSeperator();
 END
 
-
-
-DELIMITER $$
---
--- Procedures
---
-
-update tuts_rest.RegisteringInfo set checkResult = NULL
-update tuts_rest.NonCheckingDay set tuts_rest.NonCheckingDay.day = CURRENT_DATE
-
-
-update tuts_rest.SeatAvailable set SeatAvailable.day = CURRENT_DATE where id = 5
-update NonCheckingDay set tuts_rest.NonCheckingDay.day = '2016-10-19'
-
-select getSeatStatus(1,2)
-call bookASeat('abcdefghij',1,6)
-call bookASeat('123',1,1)
-
-
 DROP PROCEDURE IF EXISTS bookASeat
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `bookASeat` (IN `userID` VARCHAR(20), `doctorID` INT, `seatID` SMALLINT)
 ThisSP:BEGIN
   	DECLARE registerNumber BIGINT default 1;
@@ -104,14 +69,6 @@ ThisSP:BEGIN
     END CASE;
 END
 
-
-DELIMITER ;
-
-
-DELIMITER $$
---
--- Procedures
---
 DROP PROCEDURE IF EXISTS requestAPresenseNumber
 CREATE DEFINER=`root`@`localhost` PROCEDURE `requestAPresenseNumber` (IN `userID` VARCHAR(20), IN `doctorID` INT)
 BEGIN
@@ -132,69 +89,6 @@ BEGIN
     COMMIT;
 END
 
-DELIMITER ;
-
-
-DELIMITER $$
---
--- Procedures
---
-CREATE DEFINER=`root`@`localhost` PROCEDURE `isUserRegisteredToday` (IN `userID` VARCHAR(20))  BEGIN
-  		DECLARE countRecord INT default 0;
-        SELECT COUNT(id) INTO countRecord FROM RegisteringInfo WHERE targetDate = CURRENT_DATE AND RegisteringInfo.userID = userID;
-        select countRecord;
-END$$
-
-DELIMITER ;
-
-DELIMITER $$
---
--- Procedures
---
-CREATE DEFINER=`root`@`localhost` PROCEDURE `checkIn` (IN `userID` VARCHAR(20))  BEGIN
-    UPDATE RegisteringInfo set checkin = TRUE, checkintime = CURRENT_TIMESTAMP WHERE targetDate = CURRENT_DATE AND RegisteringInfo.userId = userID;
-END$$
-
-DELIMITER ;
-
-DELIMITER $$
---
--- Procedures
---
-
-DROP PROCEDURE IF EXISTS getCurrentAndNext
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getCurrentAndNext` (IN `doctorID` INT)  BEGIN
-    SELECT registerNumber FROM RegisteringInfo
-    WHERE RegisteringInfo.doctorID = doctorID AND checkin = 1
-          AND targetDate = CURRENT_DATE AND DATE(checkintime) = CURRENT_DATE
-          AND checkResult = 0
-    ORDER BY checkintime
-    LIMIT 2;
-END
-
-DELIMITER ;
-
-DELIMITER $$
---
--- Procedures
---
-DROP PROCEDURE IF EXISTS getWaitingList
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getWaitingList` (IN `doctorID` INT)  BEGIN
-    SELECT registerNumber FROM RegisteringInfo
-    WHERE RegisteringInfo.doctorID = doctorID AND checkin = 1
-        AND targetDate = CURRENT_DATE AND DATE(checkintime) = CURRENT_DATE
-        AND checkResult = 0
-    ORDER BY checkintime;
-END$$
-
-DELIMITER ;
-
-DELIMITER $$
---
--- Procedures
---
-
-
 DROP PROCEDURE IF EXISTS checkIn
 CREATE DEFINER=`root`@`localhost` PROCEDURE `checkIn` (IN `userID` INT, `doctorID` INT)  BEGIN
     UPDATE tuts_rest.RegisteringInfo
@@ -203,17 +97,12 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `checkIn` (IN `userID` INT, `doctorI
       AND tuts_rest.RegisteringInfo.targetDate = CURRENT_DATE;
 END
 
-update DoctorInfo set planServing = 1
-call goToNext(1,1)
-call checkIn(777941,1)
-
-
 DROP PROCEDURE IF EXISTS start
 CREATE DEFINER=`root`@`localhost` PROCEDURE `start` (IN `doctorID` INT)  BEGIN
-    UPDATE tuts_rest.RegisteringInfo
-    SET tuts_rest.RegisteringInfo.checkin = TRUE
-    WHERE tuts_rest.RegisteringInfo.userId = userID AND tuts_rest.RegisteringInfo.doctorID = doctorID
-      AND tuts_rest.RegisteringInfo.targetDate = CURRENT_DATE;
+    UPDATE tuts_rest.DoctorInfo
+    SET tuts_rest.DoctorInfo.planServing = 0, tuts_rest.DoctorInfo.actualServing = 0
+    WHERE tuts_rest.DoctorInfo.doctorID = doctorID;
+    CALL goToNext(doctorID,1);
 END
 
 DROP PROCEDURE IF EXISTS `goToNext`
@@ -258,11 +147,12 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `goToNext` (IN `doctorID` BIGINT, `n
       -- regisetering number is not yet check in OR there is no one register the planServing seat
       ELSE
         BEGIN
-          SELECT COUNT (tuts_rest.RegisteringInfo.id), tuts_rest.RegisteringInfo.registerNumber into countResult, registerNumber
+          SELECT COUNT (tuts_rest.RegisteringInfo.registerNumber), tuts_rest.RegisteringInfo.registerNumber into countResult, registerNumber
           FROM tuts_rest.RegisteringInfo
-          WHERE tuts_rest.RegisteringInfo.registerNumber > tuts_rest.getSeatSeperator() AND tuts_rest.RegisteringInfo.doctorID = 1
+          WHERE tuts_rest.RegisteringInfo.registerNumber > tuts_rest.getSeatSeperator() AND tuts_rest.RegisteringInfo.doctorID = doctorID
             AND tuts_rest.RegisteringInfo.checkin = TRUE AND tuts_rest.RegisteringInfo.targetDate = CURRENT_DATE
             AND tuts_rest.RegisteringInfo.checkResult IS NULL
+          GROUP BY tuts_rest.RegisteringInfo.registerNumber
           ORDER BY tuts_rest.RegisteringInfo.registerNumber ASC
           LIMIT 1;
           -- 2. if there is one presenseNumber which is already check in today for this doctor
@@ -272,11 +162,12 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `goToNext` (IN `doctorID` BIGINT, `n
             WHERE tuts_rest.DoctorInfo.doctorID = doctorID;
           ELSE
             BEGIN
-              SELECT COUNT (tuts_rest.RegisteringInfo.id), tuts_rest.RegisteringInfo.registerNumber into countResult, registerNumber
+              SELECT COUNT (tuts_rest.RegisteringInfo.registerNumber), tuts_rest.RegisteringInfo.registerNumber into countResult, registerNumber
               FROM tuts_rest.RegisteringInfo
               WHERE tuts_rest.RegisteringInfo.registerNumber < tuts_rest.getSeatSeperator() AND tuts_rest.RegisteringInfo.doctorID = doctorID
                 AND tuts_rest.RegisteringInfo.checkin = TRUE AND tuts_rest.RegisteringInfo.targetDate = CURRENT_DATE
                 AND tuts_rest.RegisteringInfo.checkResult IS NULL
+              GROUP BY tuts_rest.RegisteringInfo.registerNumber
               ORDER BY tuts_rest.RegisteringInfo.registerNumber ASC
               LIMIT 1;
               -- 3. if there is NO presenseNumber is being checked in --> PRIO go to the next seatID in case (s)he already checked in
@@ -301,158 +192,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `goToNext` (IN `doctorID` BIGINT, `n
     FROM tuts_rest.DoctorInfo
     where tuts_rest.DoctorInfo.doctorID = doctorID;
 END
-
-$$
-
-DELIMITER ;
-
-
-DELIMITER $$
---
--- Procedures
---
-CREATE DEFINER=`root`@`localhost` PROCEDURE `addAvailableSeat` (IN `doctorID` INT)  BEGIN
-    DECLARE count INT DEFAULT 1;
-    start transaction;
-      while count < 200 do
-        insert into SeatAvailable (doctorID, seatID, status, day) values (doctorID, count, 0, CURRENT_DATE);
-        set count = count + 1;
-      end while;
-    commit;
-END$$
-
-DELIMITER ;
-
-DELIMITER $$
---
--- Procedures
---
-CREATE DEFINER=`root`@`localhost` PROCEDURE `deleteAvailableSeat` (IN `doctorID` INT)  BEGIN
-    DECLARE count INT DEFAULT 1;
-    DELETE FROM SeatAvailable WHERE SeatAvailable.doctorID = doctorID;
-END$$
-
-DELIMITER ;
-
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS getSeatSeperator
-CREATE DEFINER=`root`@`localhost` FUNCTION `getSeatSeperator` ()
-RETURNS TINYINT UNSIGNED
-BEGIN
-RETURN 100;
-END
-
-DELIMITER ;
-
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS CONST_AVAILABLE
-CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_AVAILABLE` ()
-RETURNS TINYINT
-BEGIN
-RETURN 0;
-END
-
-DELIMITER ;
-
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS RET_SEAT_NOT_AVAILABLE
-CREATE DEFINER=`root`@`localhost` FUNCTION `RET_SEAT_NOT_AVAILABLE` ()
-RETURNS TINYINT
-BEGIN
-RETURN 0;
-END
-
-DELIMITER ;
-
-
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS CONST_BOOKED
-CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_BOOKED` ()
-RETURNS TINYINT
-BEGIN
-RETURN 1;
-END
-
-DELIMITER ;
-
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS RET_BOOK_OK
-CREATE DEFINER=`root`@`localhost` FUNCTION `RET_BOOK_OK` ()
-RETURNS TINYINT
-BEGIN
-RETURN 1;
-END
-
-DELIMITER ;
-
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS RET_DAY_OFF
-CREATE DEFINER=`root`@`localhost` FUNCTION `RET_DAY_OFF` ()
-RETURNS TINYINT
-BEGIN
-RETURN -2;
-END
-
-DELIMITER ;
-
-
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS CONST_CHECKED
-CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_CHECKED` ()
-RETURNS TINYINT
-BEGIN
-RETURN 1;
-END
-
-DELIMITER ;
-
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS CONST_SKIPPED
-CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_SKIPPED` ()
-RETURNS TINYINT
-BEGIN
-RETURN -1;
-END
-
-DELIMITER ;
-
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS RET_ALREADY_REGISTER
-CREATE DEFINER=`root`@`localhost` FUNCTION `RET_ALREADY_REGISTER` ()
-RETURNS TINYINT
-BEGIN
-RETURN -1;
-END
-
-DELIMITER ;
-
-
-DELIMITER $$
-
-DROP FUNCTION IF EXISTS RET_SEAT_OUT_OF_RANGE
-CREATE DEFINER=`root`@`localhost` FUNCTION `RET_SEAT_OUT_OF_RANGE` ()
-RETURNS TINYINT
-BEGIN
-RETURN -3;
-END
-
-DELIMITER ;
-
-
-DELIMITER $$
-
-update SeatAvailable set tuts_rest.SeatAvailable.day = CURRENT_DATE where tuts_rest.SeatAvailable.id = 2
-
-select getSeatStatus(1,-1)
 
 DROP FUNCTION IF EXISTS getSeatStatus
 CREATE DEFINER=`root`@`localhost` FUNCTION `getSeatStatus` (`doctorID` INT, `seatID` SMALLINT)
@@ -481,34 +220,90 @@ BEGIN
 
   RETURN seatStatus;
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `addAvailableSeat` (IN `doctorID` INT)  BEGIN
+    DECLARE count INT DEFAULT 1;
+    start transaction;
+      while count < 200 do
+        insert into SeatAvailable (doctorID, seatID, status, day) values (doctorID, count, 0, CURRENT_DATE);
+        set count = count + 1;
+      end while;
+    commit;
 END
 
-DELIMITER ;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `deleteAvailableSeat` (IN `doctorID` INT)  BEGIN
+    DECLARE count INT DEFAULT 1;
+    DELETE FROM SeatAvailable WHERE SeatAvailable.doctorID = doctorID;
+END$$
 
-UPDATE tuts_rest.SeatAvailable SET tuts_rest.SeatAvailable.day = DATE('2016-10-17')
-WHERE tuts_rest.SeatAvailable.doctorID = 1
+DROP FUNCTION IF EXISTS getSeatSeperator
+CREATE DEFINER=`root`@`localhost` FUNCTION `getSeatSeperator` ()
+RETURNS TINYINT UNSIGNED
+BEGIN
+RETURN 100;
+END
 
-UPDATE tuts_rest.SeatAvailable SET SeatAvailable.status = tuts_rest.CONST_BOOKED()
-  WHERE tuts_rest.SeatAvailable.doctorID = 1-- AND tuts_rest.SeatAvailable.day = DATE('2016-10-17');
+DROP FUNCTION IF EXISTS CONST_AVAILABLE
+CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_AVAILABLE` ()
+RETURNS TINYINT
+BEGIN
+RETURN 0;
+END
 
-IF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_AVAILABLE() THEN
-  SELECT "AVAILABLE";
-ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_BOOKED() THEN
-  SELECT "BOOOKED";
-ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_SKIPPED() THEN
-  SELECT "SKIPPED";
-ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.CONST_CHECKED() THEN
-  SELECT "CHECKED";
-ELSEIF tuts_rest.getSeatStatus(1,4) = tuts_rest.RET_SEAT_OUT_OF_RANGE() THEN
-  SELECT "OUT OF RANGE";
-END IF
+DROP FUNCTION IF EXISTS RET_SEAT_NOT_AVAILABLE
+CREATE DEFINER=`root`@`localhost` FUNCTION `RET_SEAT_NOT_AVAILABLE` ()
+RETURNS TINYINT
+BEGIN
+RETURN 0;
+END
 
-call bookASeat('abcde',1,4)
+DROP FUNCTION IF EXISTS CONST_BOOKED
+CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_BOOKED` ()
+RETURNS TINYINT
+BEGIN
+RETURN 1;
+END
 
-call isUserRegisteredToday('isUserRegisteredToday')
+DROP FUNCTION IF EXISTS RET_BOOK_OK
+CREATE DEFINER=`root`@`localhost` FUNCTION `RET_BOOK_OK` ()
+RETURNS TINYINT
+BEGIN
+RETURN 1;
+END
 
-call registerANumber('1234')
-call checkin('1234')
+DROP FUNCTION IF EXISTS RET_DAY_OFF
+CREATE DEFINER=`root`@`localhost` FUNCTION `RET_DAY_OFF` ()
+RETURNS TINYINT
+BEGIN
+RETURN -2;
+END
 
-update tuts_rest.SeatAvailable set tuts_rest.SeatAvailable.status = 0
-  where tuts_rest.SeatAvailable.id = 2
+DROP FUNCTION IF EXISTS CONST_CHECKED
+CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_CHECKED` ()
+RETURNS TINYINT
+BEGIN
+RETURN 1;
+END
+
+DROP FUNCTION IF EXISTS CONST_SKIPPED
+CREATE DEFINER=`root`@`localhost` FUNCTION `CONST_SKIPPED` ()
+RETURNS TINYINT
+BEGIN
+RETURN -1;
+END
+
+DROP FUNCTION IF EXISTS RET_ALREADY_REGISTER
+CREATE DEFINER=`root`@`localhost` FUNCTION `RET_ALREADY_REGISTER` ()
+RETURNS TINYINT
+BEGIN
+RETURN -1;
+END
+
+DROP FUNCTION IF EXISTS RET_SEAT_OUT_OF_RANGE
+CREATE DEFINER=`root`@`localhost` FUNCTION `RET_SEAT_OUT_OF_RANGE` ()
+RETURNS TINYINT
+BEGIN
+RETURN -3;
+END
+
+
+END
